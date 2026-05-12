@@ -214,11 +214,6 @@ els.btnToggleCamera.addEventListener('click', () => state.cameraActive ? stopCam
 
 // ========== IDENTIFY ==========
 async function identifyProduct() {
-  if (!state.apiKey || state.apiKey.trim() === '' || state.apiKey.includes('xxxx')) {
-    showToast(t('noApiKey'), 'error');
-    return;
-  }
-  
   if (!state.cameraActive || state.isAnalyzing) return;
 
   state.isAnalyzing = true;
@@ -257,28 +252,14 @@ async function identifyProduct() {
 els.btnIdentify.addEventListener('click', identifyProduct);
 
 async function callVisionAPI(base64Image) {
-  const isPT = state.language === 'pt';
-  const prompt = `Responda APENAS com JSON em ${isPT ? 'português' : 'english'}. Identifique o produto com campos: name, category, color, type, material, condition, confidence (High/Medium/Low), confidence_pct (0-100), description (1-2 frases).`;
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('/api/identify', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${state.apiKey}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: 'Especialista em identificação de produtos.' },
-        { role: 'user', content: [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: base64Image } }] }
-      ]
-    })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: base64Image, language: state.language })
   });
 
   if (!response.ok) throw new Error(`API Error: ${response.status}`);
-  const data = await response.json();
-  const content = data.choices[0].message.content;
-  return JSON.parse(content.match(/\{[\s\S]*\}/)[0]);
+  return response.json();
 }
 
 function displayResult(data, thumb) {
@@ -355,6 +336,5 @@ async function loadEnv() {
 }
 
 loadSavedSettings();
-loadEnv();
 updateTheme();
 updateLabels();
