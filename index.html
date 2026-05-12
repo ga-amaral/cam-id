@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product ID - AI Product Identification</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Meta/SEO Tags -->
+    <meta name="description" content="Sistema inteligente de identificação de produtos via câmera utilizando Inteligência Artificial (GPT-4o).">
+    <meta name="author" content="Gabriel Amaral">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+    <div class="header-left">
+        <div class="logo">📷</div>
+        <h1>Product<span>ID</span></h1>
+    </div>
+    <div class="header-right">
+        <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">
+            <span id="themeIcon">🌙</span>
+            <span id="themeText">Dark</span>
+        </button>
+    </div>
+</header>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- MAIN -->
+<main class="main-container">
+    <!-- LEFT PANEL: Camera -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2>📸 Camera</h2>
+        </div>
+        <div class="panel-body">
+            <!-- Settings Section -->
+            <div class="settings-grid">
+                <div class="setting-group">
+                    <label class="setting-label">🌐 Idioma</label>
+                    <select class="input-field" id="language">
+                        <option value="pt">Português</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">🔍 Detalhamento</label>
+                    <select class="input-field" id="detailLevel">
+                        <option value="basic">Básico</option>
+                        <option value="detailed" selected>Detalhado</option>
+                        <option value="expert">Especialista</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Camera View -->
+            <div class="camera-container" id="cameraContainer">
+                <video id="videoFeed" autoplay playsinline></video>
+                <div class="camera-placeholder" id="cameraPlaceholder">
+                    <div class="icon">📷</div>
+                    <p id="placeholderText">Clique em "Iniciar Câmera" para começar</p>
+                </div>
+                <div class="scanner-overlay" id="scannerOverlay">
+                    <div class="scanner-line"></div>
+                    <div class="scanner-corners"><span></span></div>
+                </div>
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="spinner"></div>
+                    <div class="loading-text" id="loadingText">Analisando produto...</div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="btn-group" style="margin-top: 16px;">
+                <button class="btn btn-secondary" id="btnToggleCamera">
+                    <span id="cameraBtnIcon">▶</span>
+                    <span id="cameraBtnText">Iniciar Câmera</span>
+                </button>
+                <button class="btn btn-primary" id="btnIdentify" disabled>
+                    🔍 <span id="identifyBtnText">Identificar Produto</span>
+                </button>
+            </div>
+
+            <!-- Auto-scan -->
+            <div class="auto-scan-controls">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="autoScanToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span style="font-size: 13px; color: var(--text-secondary);" id="autoScanLabel">Auto-scan</span>
+                <div class="interval-slider">
+                    <input type="range" id="intervalSlider" min="3" max="30" value="5">
+                    <span class="interval-value" id="intervalValue">5s</span>
+                </div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText" style="font-size: 13px;">Pronto</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: Results + History -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2>🏷️ Resultados</h2>
+        </div>
+        <div class="panel-body">
+            <!-- Result Content -->
+            <div class="result-empty" id="resultEmpty">
+                <div class="icon">📦</div>
+                <p id="emptyText">Capture uma imagem para identificar um produto.<br>Os resultados aparecerão aqui.</p>
+            </div>
+
+            <div class="result-content" id="resultContent">
+                <img class="result-thumbnail" id="resultThumbnail" alt="Captured product">
+                <div class="result-product-name" id="resultName">—</div>
+                <div class="result-grid">
+                    <div class="result-field">
+                        <div class="result-field-label" id="labelCategory">Categoria</div>
+                        <div class="result-field-value" id="resultCategory">—</div>
+                    </div>
+                    <div class="result-field">
+                        <div class="result-field-label" id="labelConfidence">Confiança</div>
+                        <div class="result-field-value" id="resultConfidence">—</div>
+                        <div class="confidence-bar-wrapper">
+                            <div class="confidence-bar-bg">
+                                <div class="confidence-bar-fill" id="confidenceBarFill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="result-field">
+                        <div class="result-field-label" id="labelColor">Cor</div>
+                        <div class="result-field-value" id="resultColor">—</div>
+                    </div>
+                    <div class="result-field">
+                        <div class="result-field-label" id="labelType">Tipo</div>
+                        <div class="result-field-value" id="resultType">—</div>
+                    </div>
+                    <div class="result-field">
+                        <div class="result-field-label" id="labelMaterial">Material</div>
+                        <div class="result-field-value" id="resultMaterial">—</div>
+                    </div>
+                    <div class="result-field">
+                        <div class="result-field-label" id="labelCondition">Estado</div>
+                        <div class="result-field-value" id="resultCondition">—</div>
+                    </div>
+                </div>
+                <div class="result-description" id="resultDescription"></div>
+            </div>
+        </div>
+
+        <!-- History -->
+        <div class="panel-header" style="border-top: 1px solid var(--border);">
+            <h2>📜 Histórico</h2>
+            <span style="font-size: 12px; color: var(--text-muted);" id="historyCount">0/20</span>
+        </div>
+        <div class="panel-body">
+            <div class="history-list" id="historyList">
+                <div class="history-empty" id="historyEmpty">Nenhuma identificação ainda.</div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Hidden Canvas -->
+<canvas id="captureCanvas"></canvas>
+
+<!-- Scripts -->
+<script src="script.js"></script>
+
+<!-- Footer -->
+<footer style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 12px; border-top: 1px solid var(--border); background: var(--bg-secondary);">
+    Developed by <a href="https://instagram.com/sougabrielamaral" target="_blank" style="color: var(--accent); text-decoration: none;">Gabriel Amaral</a> • 2026
+</footer>
+
+</body>
+</html>
